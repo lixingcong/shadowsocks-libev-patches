@@ -1,0 +1,170 @@
+diff --git a/src/crypto.c b/src/crypto.c
+index b44d867..bd544b9 100644
+--- a/src/crypto.c
++++ b/src/crypto.c
+@@ -131,6 +131,34 @@ entropy_check(void)
+ #endif
+ }
+ 
++int plain_stream(buffer_t *chipertext, cipher_ctx_t *chiper_ctx, size_t capacity)
++{
++    (void)chipertext;
++    (void)chiper_ctx;
++    (void)capacity;
++    return CRYPTO_OK;
++}
++
++int plain_stream_all(buffer_t *plaintext, cipher_t *chiper, size_t capacity)
++{
++    (void)plaintext;
++    (void)chiper;
++    (void)capacity;
++    return CRYPTO_OK;
++}
++
++void plain_stream_ctx_init(cipher_t *chiper, cipher_ctx_t *chiper_ctx, int enc)
++{
++    (void)chiper;
++    (void)chiper_ctx;
++    (void)enc;
++}
++
++void plain_stream_ctx_release(cipher_ctx_t *chiper_ctx)
++{
++    (void)chiper_ctx;
++}
++
+ crypto_t *
+ crypto_init(const char *password, const char *key, const char *method)
+ {
+@@ -150,6 +178,20 @@ crypto_init(const char *password, const char *key, const char *method)
+ #endif
+ 
+     if (method != NULL) {
++        if (strncmp(method, "plain", 5) == 0) {
++            crypto_t *crypto = (crypto_t *) malloc(sizeof(crypto_t));
++            crypto_t temp    = {
++                .cipher      = NULL,
++                .encrypt_all = &plain_stream_all,
++                .decrypt_all = &plain_stream_all,
++                .encrypt     = &plain_stream,
++                .decrypt     = &plain_stream,
++                .ctx_init    = &plain_stream_ctx_init,
++                .ctx_release = &plain_stream_ctx_release,
++            };
++            memcpy(crypto, &temp, sizeof(crypto_t));
++            return crypto;
++        }
+         for (i = 0; i < STREAM_CIPHER_NUM; i++)
+             if (strcmp(method, supported_stream_ciphers[i]) == 0) {
+                 m = i;
+diff --git a/src/local.c b/src/local.c
+index b1ab040..7c2f26e 100644
+--- a/src/local.c
++++ b/src/local.c
+@@ -1704,7 +1704,12 @@ main(int argc, char **argv)
+         exit(EXIT_FAILURE);
+     }
+ #endif
+-    if (!password && !key) {
++
++    if (method == NULL) {
++        method = "chacha20-ietf-poly1305";
++    }
++
++    if (strncmp(method, "plain", 5) && !password && !key) {
+         fprintf(stderr, "both password and key are NULL\n");
+         exit(EXIT_FAILURE);
+     }
+@@ -1769,10 +1774,6 @@ main(int argc, char **argv)
+         LOGI("plugin \"%s\" enabled", plugin);
+     }
+ 
+-    if (method == NULL) {
+-        method = "chacha20-ietf-poly1305";
+-    }
+-
+     if (timeout == NULL) {
+         timeout = "60";
+     }
+diff --git a/src/server.c b/src/server.c
+index 585ae80..e6859cb 100644
+--- a/src/server.c
++++ b/src/server.c
+@@ -1873,7 +1873,7 @@ main(int argc, char **argv)
+     }
+ 
+     if (server_num == 0 || server_port == NULL
+-        || (password == NULL && key == NULL)) {
++        || (strncmp(method, "plain", 5) && (password == NULL && key == NULL))) {
+         usage();
+         exit(EXIT_FAILURE);
+     }
+diff --git a/src/stream.c b/src/stream.c
+index 35d9050..fbd39a7 100644
+--- a/src/stream.c
++++ b/src/stream.c
+@@ -94,6 +94,7 @@
+ #define SALSA20             18
+ #define CHACHA20            19
+ #define CHACHA20IETF        20
++#define PLAIN               21 // 'plain' is the same as 'none' in shadowsocks-rust
+ 
+ const char *supported_stream_ciphers[STREAM_CIPHER_NUM] = {
+     "table",
+@@ -116,7 +117,8 @@ const char *supported_stream_ciphers[STREAM_CIPHER_NUM] = {
+     "seed-cfb",
+     "salsa20",
+     "chacha20",
+-    "chacha20-ietf"
++    "chacha20-ietf",
++    "plain"
+ };
+ 
+ static const char *supported_stream_ciphers_mbedtls[STREAM_CIPHER_NUM] = {
+@@ -140,15 +142,16 @@ static const char *supported_stream_ciphers_mbedtls[STREAM_CIPHER_NUM] = {
+     CIPHER_UNSUPPORTED,
+     "salsa20",
+     "chacha20",
+-    "chacha20-ietf"
++    "chacha20-ietf",
++    "plain"
+ };
+ 
+ static const int supported_stream_ciphers_nonce_size[STREAM_CIPHER_NUM] = {
+-    0, 0, 16, 16, 16, 16, 16, 16, 16, 8, 16, 16, 16, 8, 8, 8, 8, 16, 8, 8, 12
++    0, 0, 16, 16, 16, 16, 16, 16, 16, 8, 16, 16, 16, 8, 8, 8, 8, 16, 8, 8, 12, 0
+ };
+ 
+ static const int supported_stream_ciphers_key_size[STREAM_CIPHER_NUM] = {
+-    0, 16, 16, 16, 24, 32, 16, 24, 32, 16, 16, 24, 32, 16, 8, 16, 16, 16, 32, 32, 32
++    0, 16, 16, 16, 24, 32, 16, 24, 32, 16, 16, 24, 32, 16, 8, 16, 16, 16, 32, 32, 32, 0
+ };
+ 
+ static int
+diff --git a/src/stream.h b/src/stream.h
+index 35bd98f..e19757d 100644
+--- a/src/stream.h
++++ b/src/stream.h
+@@ -37,7 +37,7 @@
+ #endif
+ 
+ #include <sodium.h>
+-#define STREAM_CIPHER_NUM          21
++#define STREAM_CIPHER_NUM          22
+ 
+ #include "crypto.h"
+ 
+diff --git a/src/utils.c b/src/utils.c
+index 16defb2..7288325 100644
+--- a/src/utils.c
++++ b/src/utils.c
+@@ -311,7 +311,7 @@ usage()
+     printf(
+         "       -k <password>              Password of your remote server.\n");
+     printf(
+-        "       -m <encrypt_method>        Encrypt method: rc4-md5, \n");
++        "       -m <encrypt_method>        Encrypt method: plain, rc4-md5, \n");
+     printf(
+         "                                  aes-128-gcm, aes-192-gcm, aes-256-gcm,\n");
+     printf(
