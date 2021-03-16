@@ -13,12 +13,12 @@ First, patch source code.
 
 	git clone https://github.com/lixingcong/shadowsocks-libev-patches
 	cd shadowsocks-libev-patches
+	./update_submodule.sh
 	make
 
 Then, go into sub-dir shadowsocks-libev, compile it using your own configuration.
 
 	cd shadowsocks-libev
-	git submodule update --init --recursive
 	./autogen.sh
 	./configure --disable-documentation
 	make -j4
