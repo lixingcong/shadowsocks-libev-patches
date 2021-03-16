@@ -1,6 +1,6 @@
 # Patches for shadowsocks-libev
 
-## Patches in folder ```patches```
+## Patches in folder [patches](patches)
 
 |Patch|Note|Reference|
 |--|--|--|
