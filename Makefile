@@ -1,7 +1,7 @@
 SS_DIR     := shadowsocks-libev
 PATCH_DIR  := patches
-PATCHES    := $(wildcard $(PATCH_DIR)/*.patch)
-PATCHED    := $(patsubst $(PATCH_DIR)/%.patch, $(PATCH_DIR)/%.patched, $(PATCHES))
+PATCHES    := $(sort $(wildcard $(PATCH_DIR)/*.patch))
+PATCHED    := $(sort $(patsubst $(PATCH_DIR)/%.patch, $(PATCH_DIR)/%.patched, $(PATCHES)))
 
 all:$(PATCHED)
 	@echo "Patches have been applied, please complie $(SS_DIR) manually"
@@ -10,7 +10,9 @@ all:$(PATCHED)
 # for preventing from producing out of order chunks
 .NOTPARALLEL: %.patched
 %.patched:%.patch
+	@echo "Applying $^"
 	@patch -p 1 -d $(SS_DIR) < $^ && touch $@
+	@echo
 
 .PHONY: reset_submodule
 reset_submodule:
