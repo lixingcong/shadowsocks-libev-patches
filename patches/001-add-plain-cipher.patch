@@ -87,8 +87,21 @@ index b1ab040..7c2f26e 100644
      if (timeout == NULL) {
          timeout = "60";
      }
+diff --git a/src/redir.c b/src/redir.c
+index 4a5a489..bb37f3f 100644
+--- a/src/redir.c
++++ b/src/redir.c
+@@ -1145,7 +1145,7 @@ main(int argc, char **argv)
+     }
+ 
+     if (remote_num == 0 || remote_port == NULL || local_port == NULL
+-        || (password == NULL && key == NULL)) {
++        || (strncmp(method, "plain", 5) && password == NULL && key == NULL)) {
+         usage();
+         exit(EXIT_FAILURE);
+     }
 diff --git a/src/server.c b/src/server.c
-index 585ae80..e6859cb 100644
+index 585ae80..af7a4eb 100644
 --- a/src/server.c
 +++ b/src/server.c
 @@ -1873,7 +1873,7 @@ main(int argc, char **argv)
@@ -96,7 +109,7 @@ index 585ae80..e6859cb 100644
  
      if (server_num == 0 || server_port == NULL
 -        || (password == NULL && key == NULL)) {
-+        || (strncmp(method, "plain", 5) && (password == NULL && key == NULL))) {
++        || (strncmp(method, "plain", 5) && password == NULL && key == NULL)) {
          usage();
          exit(EXIT_FAILURE);
      }
@@ -155,6 +168,19 @@ index 35bd98f..e19757d 100644
  
  #include "crypto.h"
  
+diff --git a/src/tunnel.c b/src/tunnel.c
+index e0886bd..78d9991 100644
+--- a/src/tunnel.c
++++ b/src/tunnel.c
+@@ -1145,7 +1145,7 @@ main(int argc, char **argv)
+     }
+ 
+     if (remote_num == 0 || remote_port == NULL || tunnel_addr_str == NULL
+-        || local_port == NULL || (password == NULL && key == NULL)) {
++        || local_port == NULL || (strncmp(method, "plain", 5) && password == NULL && key == NULL)) {
+         usage();
+         exit(EXIT_FAILURE);
+     }
 diff --git a/src/utils.c b/src/utils.c
 index 16defb2..7288325 100644
 --- a/src/utils.c

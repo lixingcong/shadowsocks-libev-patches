@@ -1,5 +1,5 @@
 diff --git a/src/server.c b/src/server.c
-index e6859cb..ecfe401 100644
+index af7a4eb..83704fb 100644
 --- a/src/server.c
 +++ b/src/server.c
 @@ -1407,11 +1407,11 @@ new_server(int fd, listen_ctx_t *listener)
