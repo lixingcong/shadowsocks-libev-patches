@@ -1,8 +1,8 @@
 diff --git a/src/server.c b/src/server.c
-index d480ec9..ccb4d53 100644
+index b807281..20b9b94 100644
 --- a/src/server.c
 +++ b/src/server.c
-@@ -1620,11 +1620,11 @@ new_server(int fd, listen_ctx_t *listener)
+@@ -1625,11 +1625,11 @@ new_server(int fd, listen_ctx_t *listener)
      crypto->ctx_init(crypto->cipher, server->e_ctx, 1);
      crypto->ctx_init(crypto->cipher, server->d_ctx, 0);
  
