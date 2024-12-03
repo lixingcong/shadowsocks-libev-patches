@@ -1,35 +1,35 @@
 diff --git a/src/crypto.c b/src/crypto.c
-index b44d867..1709688 100644
+index b44d867..0191819 100644
 --- a/src/crypto.c
 +++ b/src/crypto.c
 @@ -131,6 +131,38 @@ entropy_check(void)
  #endif
  }
  
-+int plain_stream(buffer_t *chipertext, cipher_ctx_t *chiper_ctx, size_t capacity)
++int plain_stream(buffer_t *ciphertext, cipher_ctx_t *cipher_ctx, size_t capacity)
 +{
-+    (void)chipertext;
-+    (void)chiper_ctx;
++    (void)ciphertext;
++    (void)cipher_ctx;
 +    (void)capacity;
 +    return CRYPTO_OK;
 +}
 +
-+int plain_stream_all(buffer_t *plaintext, cipher_t *chiper, size_t capacity)
++int plain_stream_all(buffer_t *plaintext, cipher_t *cipher, size_t capacity)
 +{
 +    (void)plaintext;
-+    (void)chiper;
++    (void)cipher;
 +    (void)capacity;
 +    return CRYPTO_OK;
 +}
 +
-+void plain_stream_ctx_init(cipher_t *chiper, cipher_ctx_t *chiper_ctx, int enc)
++void plain_stream_ctx_init(cipher_t *cipher, cipher_ctx_t *cipher_ctx, int enc)
 +{
-+    (void)chiper;
-+    (void)chiper_ctx;
++    (void)cipher;
++    (void)cipher_ctx;
 +    (void)enc;
 +}
 +
-+void plain_stream_ctx_release(cipher_ctx_t *chiper_ctx)
++void plain_stream_ctx_release(cipher_ctx_t *cipher_ctx)
 +{
 +    if (cipher_ctx->chunk != NULL) {
 +        bfree(cipher_ctx->chunk);
