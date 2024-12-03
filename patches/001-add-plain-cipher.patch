@@ -1,8 +1,8 @@
 diff --git a/src/crypto.c b/src/crypto.c
-index b44d867..bd544b9 100644
+index b44d867..1709688 100644
 --- a/src/crypto.c
 +++ b/src/crypto.c
-@@ -131,6 +131,34 @@ entropy_check(void)
+@@ -131,6 +131,38 @@ entropy_check(void)
  #endif
  }
  
@@ -31,13 +31,17 @@ index b44d867..bd544b9 100644
 +
 +void plain_stream_ctx_release(cipher_ctx_t *chiper_ctx)
 +{
-+    (void)chiper_ctx;
++    if (cipher_ctx->chunk != NULL) {
++        bfree(cipher_ctx->chunk);
++        ss_free(cipher_ctx->chunk);
++        cipher_ctx->chunk = NULL;
++    }
 +}
 +
  crypto_t *
  crypto_init(const char *password, const char *key, const char *method)
  {
-@@ -150,6 +178,20 @@ crypto_init(const char *password, const char *key, const char *method)
+@@ -150,6 +182,20 @@ crypto_init(const char *password, const char *key, const char *method)
  #endif
  
      if (method != NULL) {
