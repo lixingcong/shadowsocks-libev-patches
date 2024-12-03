@@ -7,6 +7,7 @@
 |001-add-plain-cipher|Add plain cipher, data will be transferred without encryption. This cipher is compatible with 'none' and 'plain' of [Shadowsocks-rust](https://github.com/shadowsocks/shadowsocks-rust). Do not use it unless you are debuging socks communication.|Repo: [ss-libev-nocrypto](https://github.com/SPYFF/shadowsocks-libev-nocrypto)|
 |002-shorten-timeout-of-server|I hate long TCP connection under CMCC network|Pull Request: [Add option '--long-idle' for server](https://github.com/shadowsocks/shadowsocks-libev/pull/2463)|
 |003-add-xor-cipher|Add xor cipher for quick encrypt and decrypt. Do not use it if you need security||
+|004-add-udp-timeout-param|Add param "timeout_udp" to config.json||
 
 ## Usage
 

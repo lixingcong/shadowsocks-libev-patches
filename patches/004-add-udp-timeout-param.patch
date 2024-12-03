@@ -1,0 +1,229 @@
+commit 9c14994845da15dd211a945377773931d5fbf440
+Author: lixingcong <lixingcong@live.com>
+Date:   2024-12-03 10:49:59 +0800
+
+    add json param: timeout_udp
+
+diff --git a/src/jconf.c b/src/jconf.c
+index d2815ef..6917879 100644
+--- a/src/jconf.c
++++ b/src/jconf.c
+@@ -255,7 +255,9 @@ read_jconf(const char *file)
+             } else if (strcmp(name, "method") == 0) {
+                 conf.method = to_string(value);
+             } else if (strcmp(name, "timeout") == 0) {
+-                conf.timeout = to_string(value);
++				conf.timeout = to_string(value);
++			} else if (strcmp(name, "timeout_udp") == 0) {
++                conf.timeout_udp = to_string(value);
+             } else if (strcmp(name, "user") == 0) {
+                 conf.user = to_string(value);
+             } else if (strcmp(name, "plugin") == 0) {
+diff --git a/src/jconf.h b/src/jconf.h
+index 544011d..40324f8 100644
+--- a/src/jconf.h
++++ b/src/jconf.h
+@@ -67,6 +67,7 @@ typedef struct {
+     char *key;
+     char *method;
+     char *timeout;
++	char *timeout_udp;
+     char *user;
+     char *plugin;
+     char *plugin_opts;
+diff --git a/src/local.c b/src/local.c
+index c0e6ab9..b3b8645 100644
+--- a/src/local.c
++++ b/src/local.c
+@@ -1434,6 +1434,7 @@ main(int argc, char **argv)
+     char *password   = NULL;
+     char *key        = NULL;
+     char *timeout    = NULL;
++    char *timeout_udp = NULL;
+     char *method     = NULL;
+     char *pid_path   = NULL;
+     char *conf_path  = NULL;
+@@ -1642,6 +1643,9 @@ main(int argc, char **argv)
+         if (timeout == NULL) {
+             timeout = conf->timeout;
+         }
++        if (timeout_udp == NULL) {
++            timeout_udp = conf->timeout_udp;
++        }
+         if (user == NULL) {
+             user = conf->user;
+         }
+@@ -1783,6 +1787,10 @@ main(int argc, char **argv)
+         timeout = "60";
+     }
+ 
++    if (timeout_udp == NULL){
++        timeout_udp = timeout;
++    }
++
+ #ifdef HAVE_SETRLIMIT
+     /*
+      * no need to check the return value here since we will show
+@@ -1974,7 +1982,7 @@ main(int argc, char **argv)
+         }
+         struct sockaddr *addr = (struct sockaddr *)storage;
+         udp_fd = init_udprelay(local_addr, local_port, addr,
+-                               get_sockaddr_len(addr), mtu, crypto, listen_ctx.timeout, iface);
++                               get_sockaddr_len(addr), mtu, crypto, atoi(timeout_udp), iface);
+     }
+ 
+ #ifdef HAVE_LAUNCHD
+diff --git a/src/redir.c b/src/redir.c
+index dd21414..e951314 100644
+--- a/src/redir.c
++++ b/src/redir.c
+@@ -903,6 +903,7 @@ main(int argc, char **argv)
+     char *password   = NULL;
+     char *key        = NULL;
+     char *timeout    = NULL;
++    char *timeout_udp = NULL;
+     char *method     = NULL;
+     char *pid_path   = NULL;
+     char *conf_path  = NULL;
+@@ -1095,6 +1096,9 @@ main(int argc, char **argv)
+         if (timeout == NULL) {
+             timeout = conf->timeout;
+         }
++        if (timeout_udp == NULL) {
++            timeout_udp = conf->timeout_udp;
++        }
+         if (user == NULL) {
+             user = conf->user;
+         }
+@@ -1179,6 +1183,10 @@ main(int argc, char **argv)
+         timeout = "600";
+     }
+ 
++    if (timeout_udp == NULL) {
++        timeout_udp = timeout;
++    }
++
+ #ifdef HAVE_SETRLIMIT
+     /*
+      * no need to check the return value here since we will show
+@@ -1355,7 +1363,7 @@ main(int argc, char **argv)
+             }
+             struct sockaddr *addr = (struct sockaddr *)storage;
+             init_udprelay(local_addr, local_port, addr,
+-                          get_sockaddr_len(addr), mtu, crypto, listen_ctx_current->timeout, NULL);
++                          get_sockaddr_len(addr), mtu, crypto, atoi(timeout_udp), NULL);
+         }
+ 
+         if (mode == UDP_ONLY) {
+diff --git a/src/server.c b/src/server.c
+index 20b9b94..c952077 100644
+--- a/src/server.c
++++ b/src/server.c
+@@ -1795,6 +1795,7 @@ main(int argc, char **argv)
+     char *password  = NULL;
+     char *key       = NULL;
+     char *timeout   = NULL;
++    char *timeout_udp = NULL;
+     char *method    = NULL;
+     char *pid_path  = NULL;
+     char *conf_path = NULL;
+@@ -2000,6 +2001,9 @@ main(int argc, char **argv)
+         if (timeout == NULL) {
+             timeout = conf->timeout;
+         }
++        if (timeout_udp == NULL) {
++            timeout_udp = conf->timeout_udp;
++        }
+         if (user == NULL) {
+             user = conf->user;
+         }
+@@ -2143,6 +2147,10 @@ main(int argc, char **argv)
+         timeout = "60";
+     }
+ 
++    if (timeout_udp == NULL) {
++        timeout_udp = timeout;
++    }
++
+ #ifdef HAVE_SETRLIMIT
+     /*
+      * no need to check the return value here since we will show
+@@ -2294,9 +2302,9 @@ main(int argc, char **argv)
+             }
+ 
+             if (host && ss_is_ipv6addr(host))
+-                LOGI("tcp server listening at [%s]:%s", host, port);
++                LOGI("tcp server listening at [%s]:%s, timeout=%s", host, port, timeout);
+             else
+-                LOGI("tcp server listening at %s:%s", host ? host : "0.0.0.0", port);
++                LOGI("tcp server listening at %s:%s, timeout=%s", host ? host : "0.0.0.0", port, timeout);
+ 
+             // Bind to port
+             int listenfd;
+@@ -2341,11 +2349,11 @@ main(int argc, char **argv)
+                 port = plugin_port;
+             }
+             if (host && ss_is_ipv6addr(host))
+-                LOGI("udp server listening at [%s]:%s", host, port);
++                LOGI("udp server listening at [%s]:%s, timeout=%s", host, port, timeout_udp);
+             else
+-                LOGI("udp server listening at %s:%s", host ? host : "0.0.0.0", port);
++                LOGI("udp server listening at %s:%s, timeout=%s", host ? host : "0.0.0.0", port, timeout_udp);
+             // Setup UDP
+-            int err = init_udprelay(host, port, mtu, crypto, atoi(timeout), iface);
++            int err = init_udprelay(host, port, mtu, crypto, atoi(timeout_udp), iface);
+             if (err == -1)
+                 continue;
+             num_listen_ctx++;
+diff --git a/src/tunnel.c b/src/tunnel.c
+index 1aef7a3..5bcff4b 100644
+--- a/src/tunnel.c
++++ b/src/tunnel.c
+@@ -895,6 +895,7 @@ main(int argc, char **argv)
+     char *password   = NULL;
+     char *key        = NULL;
+     char *timeout    = NULL;
++    char *timeout_udp = NULL;
+     char *method     = NULL;
+     char *pid_path   = NULL;
+     char *conf_path  = NULL;
+@@ -1101,6 +1102,9 @@ main(int argc, char **argv)
+         if (timeout == NULL) {
+             timeout = conf->timeout;
+         }
++        if (timeout_udp == NULL) {
++            timeout_udp = conf->timeout_udp;
++        }
+         if (user == NULL) {
+             user = conf->user;
+         }
+@@ -1224,6 +1228,10 @@ main(int argc, char **argv)
+         timeout = "60";
+     }
+ 
++	if (timeout_udp == NULL) {
++		timeout_udp = timeout;
++	}
++
+ #ifdef HAVE_SETRLIMIT
+     /*
+      * no need to check the return value here since we will show
+@@ -1395,6 +1403,8 @@ main(int argc, char **argv)
+ 
+         ev_io_init(&listen_ctx.io, accept_cb, listenfd, EV_READ);
+         ev_io_start(loop, &listen_ctx.io);
++
++        LOGI("TCP relay enabled, timeout=%d", listen_ctx.timeout);
+     }
+ 
+     // Setup UDP
+@@ -1410,6 +1420,9 @@ main(int argc, char **argv)
+         struct sockaddr *addr = (struct sockaddr *)storage;
+         init_udprelay(local_addr, local_port, addr, get_sockaddr_len(addr),
+                       tunnel_addr, mtu, crypto, listen_ctx.timeout, iface);
++
++        init_udprelay(local_addr, local_port, addr, get_sockaddr_len(addr), tunnel_addr, mtu, crypto, atoi(timeout_udp), iface);
++        LOGI("UDP relay enabled, timeout=%s", timeout_udp);
+     }
+ 
+     if (mode == UDP_ONLY) {
